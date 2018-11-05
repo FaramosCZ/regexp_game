@@ -1,0 +1,6 @@
+* Add extended description
+* Add more comments
+* Fix the usage of 'flock'
+* kill generator when main process is killed (f.e. with ctrl+c in console)
+* add dictionary support
+* implement regexp history (simmilar to bash history)
