@@ -19,7 +19,7 @@ touch $FILE word_list
 
 watch_script ()
 {
- cat $FILE | while read -r line
+ while read -r line
  do
    stripped=${line:3:${#line}}
 
@@ -30,7 +30,7 @@ watch_script ()
    then
      echo -e "${RED}$stripped${NC}"
    fi
- done
+ done <<< "$(cat $FILE)"
 }
 
 watch_script_formated ()
@@ -61,7 +61,7 @@ generate ()
    STRING="N: "
  fi
 
- GENERATED_WORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $((1+RANDOM%15)) | head -n 1`
+ GENERATED_WORD=$( tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w $((1+RANDOM%15)) | head -n 1)
 
  FINAL_STRING="$STRING$GENERATED_WORD"
 
@@ -73,9 +73,9 @@ generate ()
 check_win ()
 {
  flock $FILE -c :
- if [ `grep -c -e "^N: .+" $FILE` -eq 0 ]
+ if [ "$(grep -c -e "^N: .+" "$FILE")" -eq 0 ]
  then
-   kill $GENERATOR_PID
+   kill "$GENERATOR_PID"
    echo -e "${BOLD}DATABÁZE VYČIŠTĚNA; VIRUS ZASTAVEN${NC}"
    exit 0;
  fi
@@ -116,7 +116,7 @@ fi
 
 # --------------------------------
 
-sh $0 --generate &
+sh "$0" --generate &
 GENERATOR_PID=$!
 
 while true
@@ -129,7 +129,7 @@ LINE_ARRAY=()
   # First word is used, the rest will be ignored
   while true
   do
-    read -e -p "Zadejte výraz: " regexp garbage
+    read -e -p -r "Zadejte výraz: " regexp _
     if [ "$regexp" != "" ]; then break; fi
   done
 
@@ -141,14 +141,14 @@ LINE_ARRAY=()
   do
     ((LINE_COUNTER++))
     stripped=${line:3:${#line}}
-    match_count=`echo $stripped | sed -E -n /"$regexp"/p | wc -l`
+    match_count=$(echo "$stripped" | sed -E -n /"$regexp"/p | wc -l)
     if [ "$match_count" != 0 ]
     then
-      if [ ${line:0:1} == "Y" ]
+      if [ "${line:0:1}" == "Y" ]
       then
         echo -e "${GREEN}$stripped${NC}"
         ((Y_COUNTER++))
-      elif [ ${line:0:1} == "N" ]
+      elif [ "${line:0:1}" == "N" ]
       then
         echo -e "${RED}$stripped${NC}"
         LINE_ARRAY+=("$LINE_COUNTER")
@@ -164,7 +164,7 @@ LINE_ARRAY=()
   else
     for LINE_NUMBER in "${LINE_ARRAY[@]}"
     do
-      sed -i $LINE_NUMBER"d" $FILE
+      sed -i "$LINE_NUMBER""d" $FILE
     done
     echo -e "${BOLD}OZNAČENÉ ZÁZNAMY BYLY VYMAZÁNY !${NC}"
   fi
